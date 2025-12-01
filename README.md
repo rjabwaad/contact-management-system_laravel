@@ -60,8 +60,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/contact-management-system.git
-   cd contact-management-system
+   git clone https://github.com/rjabwaad/contact-management-system_laravel.git
+   cd contact-management-system_laravel
    ```
 
 2. **Install dependencies**
