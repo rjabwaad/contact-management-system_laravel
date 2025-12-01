@@ -201,6 +201,7 @@ Tous les 8 tests doivent passer ! ✅
 
 ## 📁 Structure du Projet
 
+```
 ├── app/
 │   ├── Http/Controllers/Api/
 │   │   ├── AuthController.php
@@ -221,7 +222,9 @@ Tous les 8 tests doivent passer ! ✅
 └── tests/
     └── Feature/
         └── ContactApiTest.php
+```
 
+---
 
 ## 🔐 Sécurité
 
@@ -264,4 +267,3 @@ Tous les 8 tests doivent passer ! ✅
 * `address` - Adresse (optionnel)
 * `notes` - Notes (optionnel)
 * `timestamps`
-
