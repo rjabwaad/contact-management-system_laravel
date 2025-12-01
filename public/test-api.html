@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            padding: 15px;
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API Test Page</h1>
+        
+        <div class="info">
+            <strong>Server Status:</strong> <span id="server-status">Checking...</span><br>
+            <strong>API URL:</strong> <span id="api-url">http://localhost:8000/api</span>
+        </div>
+        
+        <h3>Test API Endpoints:</h3>
+        
+        <button onclick="testServerConnection()">1. Test Server Connection</button>
+        <button onclick="testRegister()">2. Test Register</button>
+        <button onclick="testLogin()">3. Test Login</button>
+        <button onclick="testGetContacts()">4. Test Get Contacts</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let testToken = null;
+        
+        function log(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            if (type === 'success') {
+                resultDiv.className = 'result success';
+            } else if (type === 'error') {
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('result').className = 'result';
+        }
+        
+        async function testServerConnection() {
+            clearResults();
+            log('Testing server connection...');
+            
+            try {
+                const response = await fetch('http://localhost:8000');
+                log(`Server responded with status: ${response.status}`, 'success');
+                log('✅ Server is running!', 'success');
+                document.getElementById('server-status').textContent = '✅ Running';
+                document.getElementById('server-status').style.color = 'green';
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log('Make sure you run: php artisan serve', 'error');
+                document.getElementById('server-status').textContent = '❌ Not Running';
+                document.getElementById('server-status').style.color = 'red';
+            }
+        }
+        
+        async function testRegister() {
+            clearResults();
+            log('Testing registration...');
+            
+            const testUser = {
+                name: 'Test User ' + Date.now(),
+                email: `test${Date.now()}@example.com`,
+                password: 'password123',
+                password_confirmation: 'password123'
+            };
+            
+            log(`Registering user: ${testUser.email}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                log(`Response status: ${response.status}`);
+                const data = await response.json();
+                log(`Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success && data.token) {
+                    testToken = data.token;
+                    log('✅ Registration successful!', 'success');
+                    log(`Token saved: ${testToken.substring(0, 20)}...`);
+                } else {
+                    log('❌ Registration failed', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            clearResults();
+            log('Testing login...');
+            
+            const credentials = {
+                email: 'test@example.com',
+                password: 'password123'
+            };
+            
+            log(`Logging in with: ${credentials.email}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(credentials)
+                });
+                
+                log(`Response status: ${response.status}`);
+                const data = await response.json();
+                log(`Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success && data.token) {
+                    testToken = data.token;
+                    log('✅ Login successful!', 'success');
+                    log(`Token saved: ${testToken.substring(0, 20)}...`);
+                } else {
+                    log('❌ Login failed. Try registering first.', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetContacts() {
+            clearResults();
+            
+            if (!testToken) {
+                log('❌ No token found. Please login or register first.', 'error');
+                return;
+            }
+            
+            log('Testing get contacts...');
+            log(`Using token: ${testToken.substring(0, 20)}...`);
+            
+            try {
+                const response = await fetch(`${API_URL}/contacts`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${testToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                log(`Response status: ${response.status}`);
+                const data = await response.json();
+                log(`Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    log(`✅ Found ${data.contacts.length} contacts`, 'success');
+                } else {
+                    log('❌ Failed to get contacts', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test server on load
+        window.onload = function() {
+            testServerConnection();
+        };
+    </script>
+</body>
+</html>
+
